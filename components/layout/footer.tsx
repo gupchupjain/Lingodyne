@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
                 <Globe className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">Lingodyne</span>
+              <span className="text-xl font-bold">LinguaCert</span>
             </div>
             <p className="text-gray-400 mb-4">
               Professional language certification platform trusted by employers worldwide.
@@ -19,7 +19,7 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4" />
-                <span>support@lingodyne.com</span>
+                <span>support@linguacert.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-sm text-gray-400 mb-4 md:mb-0">© 2024 Lingodyne. All rights reserved.</div>
+            <div className="text-sm text-gray-400 mb-4 md:mb-0">© 2024 LinguaCert. All rights reserved.</div>
             <div className="flex space-x-6 text-sm text-gray-400">
               <a href="#" className="hover:text-white transition-colors">
                 Privacy Policy

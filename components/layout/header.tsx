@@ -18,7 +18,7 @@ export default function Header() {
               <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
                 <Globe className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Lingodyne</span>
+              <span className="text-xl font-bold text-gray-900">LinguaCert</span>
             </Link>
           </div>
 

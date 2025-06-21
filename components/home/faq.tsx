@@ -68,7 +68,7 @@ export default function FAQ() {
               <CardContent className="p-0">
                 <button
                   onClick={() => toggleFAQ(index)}
-                  className="w-full text-left p-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-inset"
+                  className="w-full text-left p-6 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 pr-4">{faq.question}</h3>
@@ -93,11 +93,11 @@ export default function FAQ() {
         <div className="text-center mt-12">
           <p className="text-gray-600 mb-4">Still have questions?</p>
           <div className="space-x-4">
-            <a href="mailto:support@lingodyne.com" className="text-green-600 hover:text-green-800 font-medium">
+            <a href="mailto:support@linguacert.com" className="text-blue-600 hover:text-blue-800 font-medium">
               Email Support
             </a>
             <span className="text-gray-300">|</span>
-            <a href="#" className="text-green-600 hover:text-green-800 font-medium">
+            <a href="#" className="text-blue-600 hover:text-blue-800 font-medium">
               Live Chat
             </a>
           </div>

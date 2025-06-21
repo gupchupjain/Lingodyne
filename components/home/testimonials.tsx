@@ -8,7 +8,7 @@ const testimonials = [
     company: "Google",
     image: "/placeholder.svg?height=60&width=60",
     rating: 5,
-    text: "Lingodyne helped me land my dream job in Germany. The certificate was immediately recognized by my employer, and the human evaluation gave me confidence in my results.",
+    text: "LinguaCert helped me land my dream job in Germany. The certificate was immediately recognized by my employer, and the human evaluation gave me confidence in my results.",
   },
   {
     name: "Miguel Rodriguez",
@@ -24,7 +24,7 @@ const testimonials = [
     company: "Amazon",
     image: "/placeholder.svg?height=60&width=60",
     rating: 5,
-    text: "I needed a Spanish certificate for a promotion, and Lingodyne delivered exactly what I needed. The QR verification feature impressed my HR department.",
+    text: "I needed a Spanish certificate for a promotion, and LinguaCert delivered exactly what I needed. The QR verification feature impressed my HR department.",
   },
   {
     name: "David Kim",
@@ -43,7 +43,7 @@ export default function Testimonials() {
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Success Stories</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Join thousands of professionals who have advanced their careers with Lingodyne language certificates.
+            Join thousands of professionals who have advanced their careers with LinguaCert language certificates.
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export default function Testimonials() {
             <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardContent className="p-6">
                 <div className="flex items-start space-x-4">
-                  <Quote className="w-8 h-8 text-green-500 flex-shrink-0" />
+                  <Quote className="w-8 h-8 text-blue-500 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-gray-700 mb-4 leading-relaxed">"{testimonial.text}"</p>
 
