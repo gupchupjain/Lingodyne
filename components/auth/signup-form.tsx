@@ -6,9 +6,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, User, Mail, Lock, Calendar } from "lucide-react"
+import { Eye, EyeOff, User, Mail, Lock, Calendar, AlertCircle, Sparkles } from "lucide-react"
 
 interface SignupFormProps {
   onStateChange: (state: "login" | "otp-verification", email?: string) => void
@@ -120,152 +119,234 @@ export default function SignupForm({ onStateChange }: SignupFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+            First Name
+          </Label>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="firstName"
               placeholder="John"
               value={formData.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className={`pl-10 ${errors.firstName ? "border-red-500" : ""}`}
+              className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+                errors.firstName ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+              }`}
             />
           </div>
-          {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
+          {errors.firstName && (
+            <div className="flex items-center space-x-1 text-red-500">
+              <AlertCircle className="w-3 h-3" />
+              <p className="text-xs">{errors.firstName}</p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+            Last Name
+          </Label>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="lastName"
               placeholder="Doe"
               value={formData.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className={`pl-10 ${errors.lastName ? "border-red-500" : ""}`}
+              className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+                errors.lastName ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+              }`}
             />
           </div>
-          {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
+          {errors.lastName && (
+            <div className="flex items-center space-x-1 text-red-500">
+              <AlertCircle className="w-3 h-3" />
+              <p className="text-xs">{errors.lastName}</p>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+          Email Address
+        </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="email"
             type="email"
-            placeholder="john.doe@example.com"
+            placeholder="john.doe@company.com"
             value={formData.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
-            className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+            className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
         </div>
-        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+        {errors.email && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.email}</p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+        <Label htmlFor="dateOfBirth" className="text-sm font-medium text-gray-700">
+          Date of Birth
+        </Label>
         <div className="relative">
-          <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="dateOfBirth"
             type="date"
             value={formData.dateOfBirth}
             onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-            className={`pl-10 ${errors.dateOfBirth ? "border-red-500" : ""}`}
+            className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.dateOfBirth ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
         </div>
-        {errors.dateOfBirth && <p className="text-sm text-red-500">{errors.dateOfBirth}</p>}
+        {errors.dateOfBirth && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.dateOfBirth}</p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+          Password
+        </Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="Create a strong password"
             value={formData.password}
             onChange={(e) => handleInputChange("password", e.target.value)}
-            className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
+            className={`pl-10 pr-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+        {errors.password && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.password}</p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+          Confirm Password
+        </Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="confirmPassword"
             type="password"
             placeholder="Confirm your password"
             value={formData.confirmPassword}
             onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-            className={`pl-10 ${errors.confirmPassword ? "border-red-500" : ""}`}
+            className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
         </div>
-        {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
+        {errors.confirmPassword && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.confirmPassword}</p>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-start space-x-3 pt-2">
         <Checkbox
           id="terms"
           checked={formData.agreeToTerms}
           onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
+          className="mt-1 border-gray-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
         />
-        <Label htmlFor="terms" className="text-sm">
-          I agree to the{" "}
-          <a href="#" className="text-blue-600 hover:underline">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="#" className="text-blue-600 hover:underline">
-            Privacy Policy
-          </a>
-        </Label>
+        <div className="space-y-1">
+          <Label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+            I agree to the{" "}
+            <a href="#" className="text-green-600 hover:text-green-700 underline font-medium">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-green-600 hover:text-green-700 underline font-medium">
+              Privacy Policy
+            </a>
+          </Label>
+          {errors.agreeToTerms && (
+            <div className="flex items-center space-x-1 text-red-500">
+              <AlertCircle className="w-3 h-3" />
+              <p className="text-xs">{errors.agreeToTerms}</p>
+            </div>
+          )}
+        </div>
       </div>
-      {errors.agreeToTerms && <p className="text-sm text-red-500">{errors.agreeToTerms}</p>}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Creating Account..." : "Create Account"}
+      <Button
+        type="submit"
+        className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-4 h-4" />
+            <span>Create Account</span>
+          </div>
+        )}
       </Button>
 
       {errors.general && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-sm text-red-600">{errors.general}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-red-500" />
+            <p className="text-sm text-red-600">{errors.general}</p>
+          </div>
         </div>
       )}
 
-      <Separator />
-
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => onStateChange("login")}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Sign in
-          </button>
-        </p>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-gray-500">Already have an account?</span>
+        </div>
       </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onStateChange("login")}
+        className="w-full h-11 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        Sign In Instead
+      </Button>
     </form>
   )
 }

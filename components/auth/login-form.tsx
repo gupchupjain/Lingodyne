@@ -6,8 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
 
 interface LoginFormProps {
   onStateChange: (state: "signup" | "forgot-password", email?: string) => void
@@ -86,80 +85,118 @@ export default function LoginForm({ onStateChange }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+          Email Address
+        </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="email"
             type="email"
             placeholder="Enter your email"
             value={formData.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
-            className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+            className={`pl-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
         </div>
-        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+        {errors.email && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.email}</p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+          Password
+        </Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             value={formData.password}
             onChange={(e) => handleInputChange("password", e.target.value)}
-            className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
+            className={`pl-10 pr-10 h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 transition-colors ${
+              errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+            }`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+        {errors.password && (
+          <div className="flex items-center space-x-1 text-red-500">
+            <AlertCircle className="w-3 h-3" />
+            <p className="text-sm">{errors.password}</p>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={() => onStateChange("forgot-password")}
-          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-sm text-green-600 hover:text-green-700 font-medium hover:underline transition-colors"
         >
           Forgot password?
         </button>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Signing in..." : "Sign In"}
+      <Button
+        type="submit"
+        className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Signing in...</span>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <LogIn className="w-4 h-4" />
+            <span>Sign In</span>
+          </div>
+        )}
       </Button>
 
       {errors.general && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-sm text-red-600">{errors.general}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-red-500" />
+            <p className="text-sm text-red-600">{errors.general}</p>
+          </div>
         </div>
       )}
 
-      <Separator />
-
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          {"Don't have an account? "}
-          <button
-            type="button"
-            onClick={() => onStateChange("signup")}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Sign up
-          </button>
-        </p>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-gray-500">New to EnglishPro?</span>
+        </div>
       </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onStateChange("signup")}
+        className="w-full h-11 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        Create Account
+      </Button>
     </form>
   )
 }
