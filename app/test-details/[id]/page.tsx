@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Users,
   Globe,
+  AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -68,13 +69,11 @@ export default function TestDetailsPage() {
 
   const [testDetails, setTestDetails] = useState<TestDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAssigning, setIsAssigning] = useState(false)
   const [error, setError] = useState("")
-
-  useEffect(() => {
-    if (testId) {
-      fetchTestDetails()
-    }
-  }, [testId])
+  const [assignmentError, setAssignmentError] = useState("")
+  const [assignmentSuccess, setAssignmentSuccess] = useState("")
+  const [authStatus, setAuthStatus] = useState<any>(null)
 
   const fetchTestDetails = async () => {
     try {
@@ -91,6 +90,81 @@ export default function TestDetailsPage() {
       setError("Failed to load test details")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch("/api/auth/me")
+      const data = await response.json()
+      setAuthStatus({ success: response.ok, data })
+      console.log("Auth status:", { success: response.ok, data })
+    } catch (error) {
+      console.error("Auth check failed:", error)
+      setAuthStatus({ success: false, error: "Network error" })
+    }
+  }
+
+  useEffect(() => {
+    if (testId) {
+      fetchTestDetails()
+      checkAuthStatus()
+    }
+  }, [testId])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading test details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Add debug info right after loading check
+  if (process.env.NODE_ENV === "development" && authStatus) {
+    console.log("Current auth status:", authStatus)
+  }
+
+  const handleAssignTest = async () => {
+    if (!testDetails) return
+
+    setIsAssigning(true)
+    setAssignmentError("")
+    setAssignmentSuccess("")
+
+    try {
+      const response = await fetch("/api/user-tests/assign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          test_template_id: testDetails.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setAssignmentError("You already have this test assigned. Check your dashboard to continue.")
+        } else if (response.status === 401) {
+          setAssignmentError("Please log in to assign tests.")
+        } else {
+          setAssignmentError(data.error || "Failed to assign test")
+        }
+        return
+      }
+
+      setAssignmentSuccess("Test successfully added to your dashboard! You can now start taking the test.")
+    } catch (error) {
+      console.error("Error assigning test:", error)
+      setAssignmentError("Network error. Please try again.")
+    } finally {
+      setIsAssigning(false)
     }
   }
 
@@ -123,44 +197,92 @@ export default function TestDetailsPage() {
   const getActionButton = () => {
     if (!testDetails) return null
 
+    if (assignmentSuccess) {
+      return (
+        <div className="space-y-3">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <p className="text-green-700 font-medium">{assignmentSuccess}</p>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            asChild
+          >
+            <Link href="/dashboard">
+              <FileText className="w-5 h-5 mr-2" />
+              Go to Dashboard
+            </Link>
+          </Button>
+        </div>
+      )
+    }
+
     if (testDetails.test_type === "full") {
       return (
-        <Button
-          size="lg"
-          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold"
-          asChild
-        >
-          <Link href={`/purchase/${testDetails.id}`}>
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Buy Test - {testDetails.pricing.price}
-          </Link>
-        </Button>
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold"
+            onClick={handleAssignTest}
+            disabled={isAssigning}
+          >
+            {isAssigning ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adding Test...</span>
+              </div>
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Buy Test - {testDetails.pricing.price}
+              </>
+            )}
+          </Button>
+          {assignmentError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <p className="text-red-700 text-sm">{assignmentError}</p>
+              </div>
+            </div>
+          )}
+        </div>
       )
     } else {
       return (
-        <Button
-          size="lg"
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
-          asChild
-        >
-          <Link href={`/take-test/${testDetails.id}`}>
-            <Play className="w-5 h-5 mr-2" />
-            Start {testDetails.test_type === "demo" ? "Demo" : "Practice"} Test - Free
-          </Link>
-        </Button>
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+            onClick={handleAssignTest}
+            disabled={isAssigning}
+          >
+            {isAssigning ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adding Test...</span>
+              </div>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Start {testDetails.test_type === "demo" ? "Demo" : "Practice"} Test - Free
+              </>
+            )}
+          </Button>
+          {assignmentError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <p className="text-red-700 text-sm">{assignmentError}</p>
+              </div>
+            </div>
+          )}
+        </div>
       )
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading test details...</p>
-        </div>
-      </div>
-    )
   }
 
   if (error || !testDetails) {

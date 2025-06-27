@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
       .setExpirationTime("7d")
       .sign(JWT_SECRET)
 
+    console.log("Login - JWT token created for user:", user.email)
+
     // Create response
     const response = NextResponse.json({
       message: "Login successful",
@@ -54,14 +56,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Set HTTP-only cookie
+    // Set HTTP-only cookie with more explicit settings
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
     })
+
+    console.log("Login - Cookie set successfully")
 
     return response
   } catch (error) {
