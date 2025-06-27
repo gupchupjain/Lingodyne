@@ -74,6 +74,16 @@ export async function POST(request: NextRequest) {
         console.error("User creation error:", userError)
         return NextResponse.json({ error: "Failed to create user account" }, { status: 500 })
       }
+
+      // Assign default 'user' role to new user
+      const { data: userRole } = await supabase.from("roles").select("id").eq("name", "user").single()
+
+      if (userRole) {
+        await supabase.from("user_roles").insert({
+          user_id: newUser.id,
+          role_id: userRole.id,
+        })
+      }
     }
 
     // Generate and store OTP

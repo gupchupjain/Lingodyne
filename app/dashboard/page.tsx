@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Award, Play, Briefcase, User, LogOut, GraduationCap } from "lucide-react"
+import { BookOpen, Award, Play, Briefcase, User, LogOut, GraduationCap, FileText } from "lucide-react"
+import Link from "next/link"
 import MyTests from "@/components/dashboard/my-tests"
 import Practice from "@/components/dashboard/practice"
 import TestInfo from "@/components/dashboard/test-info"
@@ -41,8 +42,19 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* User Menu */}
+            {/* Give Test Button */}
             <div className="flex items-center space-x-4">
+              <Button
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium"
+                asChild
+              >
+                <Link href="/select-test">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Give Test
+                </Link>
+              </Button>
+
+              {/* User Menu */}
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-gray-900">
                   {user.firstName} {user.lastName}

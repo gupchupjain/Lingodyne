@@ -116,9 +116,9 @@ export default function Languages() {
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                     asChild
                   >
-                    <Link href={`/purchase/${language.name.toLowerCase()}`}>Buy Test</Link>
+                    <Link href="/auth">Buy Test</Link>
                   </Button>
-                  <Button variant="outline" className="w-full" asChild>
+                  <Button variant="outline" className="w-full bg-transparent" asChild>
                     <Link href="/demo">Try Free Demo</Link>
                   </Button>
                 </div>
