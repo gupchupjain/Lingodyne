@@ -82,6 +82,53 @@ export async function POST(
       return NextResponse.json({ error: "Failed to save answers" }, { status: 500 })
     }
 
+    // Auto-grade reading and listening questions
+    const { data: autoGradableQuestions, error: autoGradeError } = await supabase
+      .from("template_questions")
+      .select(`
+        question_id,
+        questions (
+          id,
+          is_auto_gradable,
+          correct_answer,
+          max_score
+        )
+      `)
+      .eq("test_template_id", userTest.test_template_id)
+      .eq("questions.is_auto_gradable", true)
+
+    if (!autoGradeError && autoGradableQuestions) {
+      // Update auto-graded answers
+      const autoGradeUpdates = autoGradableQuestions.map(tq => {
+        const question = tq.questions as any
+        const userAnswer = answers[question.id]
+        const isCorrect = userAnswer && userAnswer.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase()
+        
+        return {
+          user_test_id: params.id,
+          question_id: question.id,
+          is_correct: isCorrect,
+          auto_score: isCorrect ? question.max_score : 0
+        }
+      })
+
+      // Update auto-graded scores
+      for (const update of autoGradeUpdates) {
+        const { error: updateError } = await supabase
+          .from("test_answers")
+          .update({
+            is_correct: update.is_correct,
+            auto_score: update.auto_score
+          })
+          .eq("user_test_id", update.user_test_id)
+          .eq("question_id", update.question_id)
+
+        if (updateError) {
+          console.error("Error updating auto-grade for question:", update.question_id, updateError)
+        }
+      }
+    }
+
     // Update test status to under_review for manual review
     const { error: updateError } = await supabase
       .from("user_tests")

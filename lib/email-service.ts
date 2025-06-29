@@ -1,9 +1,22 @@
 import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 export async function sendVerificationEmail(email: string, otp: string, firstName: string) {
   try {
+    // In development, log the email instead of sending if it's a test domain
+    if (isDevelopment && (email.includes('example.com') || email.includes('test.com'))) {
+      console.log('=== DEVELOPMENT EMAIL LOG ===')
+      console.log('To:', email)
+      console.log('Subject: Verify Your Email - EnglishPro Test')
+      console.log('OTP Code:', otp)
+      console.log('First Name:', firstName)
+      console.log('=== END EMAIL LOG ===')
+      
+      return { success: true, data: { id: 'dev-email-logged' } }
+    }
+
     const { data, error } = await resend.emails.send({
       from: "EnglishPro Test <onboarding@resend.dev>",
       to: [email],
@@ -48,6 +61,15 @@ export async function sendVerificationEmail(email: string, otp: string, firstNam
 
     if (error) {
       console.error("Email sending error:", error)
+      
+      // Handle specific Resend errors
+      if (error.message.includes('Invalid `to` field')) {
+        return { 
+          success: false, 
+          error: "Email domain not allowed in development. Please use a real email address or check the console for the OTP code." 
+        }
+      }
+      
       return { success: false, error: error.message }
     }
 
@@ -62,6 +84,18 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`
 
   try {
+    // In development, log the email instead of sending if it's a test domain
+    if (isDevelopment && (email.includes('example.com') || email.includes('test.com'))) {
+      console.log('=== DEVELOPMENT EMAIL LOG ===')
+      console.log('To:', email)
+      console.log('Subject: Reset Your Password - EnglishPro Test')
+      console.log('Reset URL:', resetUrl)
+      console.log('First Name:', firstName)
+      console.log('=== END EMAIL LOG ===')
+      
+      return { success: true, data: { id: 'dev-email-logged' } }
+    }
+
     const { data, error } = await resend.emails.send({
       from: "EnglishPro Test <onboarding@resend.dev>",
       to: [email],
@@ -107,6 +141,15 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
 
     if (error) {
       console.error("Email sending error:", error)
+      
+      // Handle specific Resend errors
+      if (error.message.includes('Invalid `to` field')) {
+        return { 
+          success: false, 
+          error: "Email domain not allowed in development. Please use a real email address or check the console for the reset link." 
+        }
+      }
+      
       return { success: false, error: error.message }
     }
 

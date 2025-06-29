@@ -3,15 +3,17 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Award, Play, Briefcase, User, LogOut, GraduationCap, FileText } from "lucide-react"
+import { BookOpen, Award, Play, Briefcase, User, LogOut, GraduationCap, FileText, Eye } from "lucide-react"
 import Link from "next/link"
 import MyTests from "@/components/dashboard/my-tests"
 import Practice from "@/components/dashboard/practice"
 import TestInfo from "@/components/dashboard/test-info"
 import Jobs from "@/components/dashboard/jobs"
+import { useUserRoles } from "@/hooks/useUserRoles"
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("my-tests")
+  const { hasAnyRole } = useUserRoles()
 
   // Mock user data - replace with actual auth context
   const user = {
@@ -53,6 +55,20 @@ export default function DashboardPage() {
                   Give Test
                 </Link>
               </Button>
+
+              {/* Reviewer Link - Only show for reviewers */}
+              {hasAnyRole(['reviewer', 'admin', 'super_admin']) && (
+                <Button
+                  variant="outline"
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                  asChild
+                >
+                  <Link href="/reviewer">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Review Tests
+                  </Link>
+                </Button>
+              )}
 
               {/* User Menu */}
               <div className="hidden sm:block text-right">

@@ -50,3 +50,32 @@ export async function getAuthenticatedUser(request: NextRequest) {
     return { error: "Invalid or expired token", status: 401 }
   }
 }
+
+export async function getUserRoles(userId: string) {
+  try {
+    const supabase = createServerClient()
+    const { data: userRoles, error: roleError } = await supabase
+      .from("user_roles")
+      .select(`
+        roles (
+          name
+        )
+      `)
+      .eq("user_id", userId)
+
+    if (roleError) {
+      console.error("Error fetching user roles:", roleError)
+      return []
+    }
+
+    return userRoles?.map(ur => (ur.roles as any)?.name).filter(Boolean) || []
+  } catch (error) {
+    console.error("Error getting user roles:", error)
+    return []
+  }
+}
+
+export async function hasRole(userId: string, role: string) {
+  const roles = await getUserRoles(userId)
+  return roles.includes(role)
+}
