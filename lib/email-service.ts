@@ -10,13 +10,13 @@ const getSenderEmail = () => {
     return `noreply@${process.env.CUSTOM_DOMAIN}`
   }
   
-  // Fallback to Resend's production domain
+  // Use Resend's production domain (not sandbox)
   if (!isDevelopment) {
     return "noreply@resend.dev"
   }
   
-  // Development fallback
-  return "onboarding@resend.dev"
+  // Development fallback - use production domain for testing
+  return "noreply@resend.dev"
 }
 
 export async function sendVerificationEmail(email: string, otp: string, firstName: string) {

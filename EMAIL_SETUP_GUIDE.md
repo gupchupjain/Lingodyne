@@ -68,7 +68,7 @@ RESEND_API_KEY=re_fo66dP62_P2CU6dfELqPgoXfLrj2qNyD6
 NEXT_PUBLIC_APP_URL=https://v0-corporate-language-test-site.vercel.app
 
 # Optional (for custom domain)
-CUSTOM_DOMAIN=yourcompany.com
+CUSTOM_DOMAIN=v0-corporate-language-test-site.vercel.app
 ```
 
 ## Common Error Messages & Solutions
