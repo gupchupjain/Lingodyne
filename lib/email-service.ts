@@ -92,14 +92,14 @@ export async function sendVerificationEmail(email: string, otp: string, firstNam
       if (error.message.includes('You can only send testing emails to your own email address')) {
         return { 
           success: false, 
-          error: "Resend is in sandbox mode. Please verify a domain at resend.com/domains to send to other recipients." 
+          error: "Resend is in sandbox mode. Please verify your domain at resend.com/domains to send to other recipients. For testing, use your own email address (the one you used to sign up for Resend)." 
         }
       }
       
       if (error.message.includes('Domain not verified')) {
         return { 
           success: false, 
-          error: "Sender domain not verified. Please verify your domain at resend.com/domains." 
+          error: "Sender domain not verified. Please verify your domain at resend.com/domains and ensure CUSTOM_DOMAIN environment variable is set correctly." 
         }
       }
       
@@ -190,14 +190,14 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
       if (error.message.includes('You can only send testing emails to your own email address')) {
         return { 
           success: false, 
-          error: "Resend is in sandbox mode. Please verify a domain at resend.com/domains to send to other recipients." 
+          error: "Resend is in sandbox mode. Please verify your domain at resend.com/domains to send to other recipients. For testing, use your own email address (the one you used to sign up for Resend)." 
         }
       }
       
       if (error.message.includes('Domain not verified')) {
         return { 
           success: false, 
-          error: "Sender domain not verified. Please verify your domain at resend.com/domains." 
+          error: "Sender domain not verified. Please verify your domain at resend.com/domains and ensure CUSTOM_DOMAIN environment variable is set correctly." 
         }
       }
       
