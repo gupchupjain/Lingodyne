@@ -3,6 +3,22 @@ import { Resend } from "resend"
 const resend = new Resend(process.env.RESEND_API_KEY)
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+// Configure sender email based on environment
+const getSenderEmail = () => {
+  // In production, try to use a custom domain if available
+  if (!isDevelopment && process.env.CUSTOM_DOMAIN) {
+    return `noreply@${process.env.CUSTOM_DOMAIN}`
+  }
+  
+  // Fallback to Resend's production domain
+  if (!isDevelopment) {
+    return "noreply@resend.dev"
+  }
+  
+  // Development fallback
+  return "onboarding@resend.dev"
+}
+
 export async function sendVerificationEmail(email: string, otp: string, firstName: string) {
   try {
     // In development, log the email instead of sending if it's a test domain
@@ -17,8 +33,11 @@ export async function sendVerificationEmail(email: string, otp: string, firstNam
       return { success: true, data: { id: 'dev-email-logged' } }
     }
 
+    const senderEmail = getSenderEmail()
+    console.log(`Sending email from: ${senderEmail} to: ${email}`)
+
     const { data, error } = await resend.emails.send({
-      from: "EnglishPro Test <onboarding@resend.dev>",
+      from: `EnglishPro Test <${senderEmail}>`,
       to: [email],
       subject: "Verify Your Email - EnglishPro Test",
       html: `
@@ -70,9 +89,24 @@ export async function sendVerificationEmail(email: string, otp: string, firstNam
         }
       }
       
+      if (error.message.includes('You can only send testing emails to your own email address')) {
+        return { 
+          success: false, 
+          error: "Resend is in sandbox mode. Please verify a domain at resend.com/domains to send to other recipients." 
+        }
+      }
+      
+      if (error.message.includes('Domain not verified')) {
+        return { 
+          success: false, 
+          error: "Sender domain not verified. Please verify your domain at resend.com/domains." 
+        }
+      }
+      
       return { success: false, error: error.message }
     }
 
+    console.log("Email sent successfully:", data)
     return { success: true, data }
   } catch (error) {
     console.error("Email service error:", error)
@@ -96,8 +130,11 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
       return { success: true, data: { id: 'dev-email-logged' } }
     }
 
+    const senderEmail = getSenderEmail()
+    console.log(`Sending password reset email from: ${senderEmail} to: ${email}`)
+
     const { data, error } = await resend.emails.send({
-      from: "EnglishPro Test <onboarding@resend.dev>",
+      from: `EnglishPro Test <${senderEmail}>`,
       to: [email],
       subject: "Reset Your Password - EnglishPro Test",
       html: `
@@ -150,9 +187,24 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
         }
       }
       
+      if (error.message.includes('You can only send testing emails to your own email address')) {
+        return { 
+          success: false, 
+          error: "Resend is in sandbox mode. Please verify a domain at resend.com/domains to send to other recipients." 
+        }
+      }
+      
+      if (error.message.includes('Domain not verified')) {
+        return { 
+          success: false, 
+          error: "Sender domain not verified. Please verify your domain at resend.com/domains." 
+        }
+      }
+      
       return { success: false, error: error.message }
     }
 
+    console.log("Password reset email sent successfully:", data)
     return { success: true, data }
   } catch (error) {
     console.error("Email service error:", error)
