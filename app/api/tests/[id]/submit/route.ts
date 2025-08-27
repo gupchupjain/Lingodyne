@@ -24,6 +24,7 @@ export async function POST(
         id,
         test_template_id,
         status,
+        submitted_at,
         test_templates (
           id,
           title
@@ -38,7 +39,11 @@ export async function POST(
     }
 
     if (userTest.status === 'submitted' || userTest.status === 'under_review' || userTest.status === 'reviewed') {
-      return NextResponse.json({ error: "Test already submitted" }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Test already submitted",
+        status: userTest.status,
+        submittedAt: userTest.submitted_at
+      }, { status: 400 })
     }
 
     // Get all questions for this test
@@ -56,30 +61,51 @@ export async function POST(
     }
 
     // Create a map of question_id to section for answers insertion
-    const questionSectionMap = templateQuestions.reduce((acc, tq) => {
-      acc[tq.question_id] = tq.section
-      return acc
-    }, {} as Record<string, string>)
+    const questionSectionMap = templateQuestions
+      .filter(tq => tq.question_id !== null) // Filter out null question_ids
+      .reduce((acc, tq) => {
+        acc[tq.question_id] = tq.section
+        return acc
+      }, {} as Record<string, string>)
 
     // Prepare answers for insertion
-    const answersToInsert = Object.entries(answers).map(([questionId, answerText]) => ({
-      user_test_id: params.id,
-      question_id: questionId,
-      section: questionSectionMap[questionId] || 'reading',
-      answer_text: answerText as string,
-      audio_url: null, // TODO: Handle audio upload for speaking questions
-      is_correct: null,
-      auto_score: null
-    }))
+    const answersToInsert = Object.entries(answers)
+      .filter(([questionId]) => questionSectionMap[questionId]) // Only include questions that exist in the template
+      .map(([questionId, answerText]) => ({
+        user_test_id: params.id,
+        question_id: questionId,
+        section: questionSectionMap[questionId] || 'reading',
+        answer_text: answerText as string,
+        audio_url: null, // TODO: Handle audio upload for speaking questions
+        is_correct: null,
+        auto_score: null
+      }))
 
-    // Insert all answers
-    const { error: answersError } = await supabase
+    // Check if answers already exist for this test
+    const { data: existingAnswers, error: existingError } = await supabase
       .from("test_answers")
-      .insert(answersToInsert)
+      .select("question_id")
+      .eq("user_test_id", params.id)
 
-    if (answersError) {
-      console.error("Error inserting answers:", answersError)
-      return NextResponse.json({ error: "Failed to save answers" }, { status: 500 })
+    if (existingError) {
+      console.error("Error checking existing answers:", existingError)
+      return NextResponse.json({ error: "Failed to check existing answers" }, { status: 500 })
+    }
+
+    // Filter out questions that already have answers
+    const existingQuestionIds = new Set(existingAnswers?.map(a => a.question_id) || [])
+    const newAnswersToInsert = answersToInsert.filter(answer => !existingQuestionIds.has(answer.question_id))
+
+    // Insert only new answers
+    if (newAnswersToInsert.length > 0) {
+      const { error: answersError } = await supabase
+        .from("test_answers")
+        .insert(newAnswersToInsert)
+
+      if (answersError) {
+        console.error("Error inserting answers:", answersError)
+        return NextResponse.json({ error: "Failed to save answers" }, { status: 500 })
+      }
     }
 
     // Auto-grade reading and listening questions
@@ -95,22 +121,25 @@ export async function POST(
         )
       `)
       .eq("test_template_id", userTest.test_template_id)
+      .not("question_id", "is", null)
       .eq("questions.is_auto_gradable", true)
 
     if (!autoGradeError && autoGradableQuestions) {
       // Update auto-graded answers
-      const autoGradeUpdates = autoGradableQuestions.map(tq => {
-        const question = tq.questions as any
-        const userAnswer = answers[question.id]
-        const isCorrect = userAnswer && userAnswer.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase()
-        
-        return {
-          user_test_id: params.id,
-          question_id: question.id,
-          is_correct: isCorrect,
-          auto_score: isCorrect ? question.max_score : 0
-        }
-      })
+      const autoGradeUpdates = autoGradableQuestions
+        .filter(tq => tq.questions !== null) // Filter out null questions
+        .map(tq => {
+          const question = tq.questions as any
+          const userAnswer = answers[question.id]
+          const isCorrect = userAnswer && userAnswer.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase()
+          
+          return {
+            user_test_id: params.id,
+            question_id: question.id,
+            is_correct: isCorrect,
+            auto_score: isCorrect ? question.max_score : 0
+          }
+        })
 
       // Update auto-graded scores
       for (const update of autoGradeUpdates) {

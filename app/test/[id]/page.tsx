@@ -10,6 +10,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -20,7 +28,8 @@ import {
   Play, 
   Pause,
   Volume2,
-  Send
+  Send,
+  AlertTriangle
 } from "lucide-react"
 
 interface Question {
@@ -69,6 +78,10 @@ export default function TestPage() {
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+  const [error, setError] = useState("")
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false)
+  const [showTimeUpDialog, setShowTimeUpDialog] = useState(false)
+  const [autoSubmitting, setAutoSubmitting] = useState(false)
 
   const sectionOrder = ['reading', 'writing', 'speaking', 'listening']
 
@@ -83,8 +96,19 @@ export default function TestPage() {
       const timer = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            handleSubmitTest()
+            // Show time up dialog and auto-submit
+            setShowTimeUpDialog(true)
+            setAutoSubmitting(true)
+            handleAutoSubmit()
             return 0
+          }
+          // Show warning when 5 minutes remaining
+          if (prev === 300) {
+            alert("⚠️ Warning: You have 5 minutes remaining!")
+          }
+          // Show warning when 1 minute remaining
+          if (prev === 60) {
+            alert("⚠️ Warning: You have 1 minute remaining!")
           }
           return prev - 1
         })
@@ -154,32 +178,65 @@ export default function TestPage() {
     handleNext()
   }
 
-  const handleSubmitTest = async () => {
-    setSubmitting(true)
+  const handleAutoSubmit = async () => {
+    if (submitting || autoSubmitting) return;
+    setAutoSubmitting(true);
     try {
       const response = await fetch(`/api/tests/${testId}/submit`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
-      })
-
+      });
+      const data = await response.json();
       if (response.ok) {
-        setSubmitted(true)
-        // Show success message for 2 seconds before redirecting
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 2000)
+        setSubmitted(true);
+        setTimeout(() => router.push('/dashboard'), 3000);
+      } else if (data?.error === "Test already submitted") {
+        setError("This test has already been submitted.");
+        setTimeout(() => router.push('/dashboard'), 2000);
       } else {
-        throw new Error('Failed to submit test')
+        setError(data?.error || "Failed to submit test. Please try again.");
       }
     } catch (error) {
-      console.error("Error submitting test:", error)
+      setError("Network error. Please try again.");
     } finally {
-      setSubmitting(false)
+      setAutoSubmitting(false);
     }
-  }
+  };
+
+  const handleSubmitTest = async () => {
+    if (submitting) return; // Prevent double submit
+    setError("");
+    
+    // Show confirmation dialog
+    setShowSubmitDialog(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowSubmitDialog(false);
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/tests/${testId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSubmitted(true);
+        setTimeout(() => router.push('/dashboard'), 3000);
+      } else if (data?.error === "Test already submitted") {
+        setError("This test has already been submitted.");
+        setTimeout(() => router.push('/dashboard'), 2000);
+      } else {
+        setError(data?.error || "Failed to submit test. Please try again.");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -260,87 +317,87 @@ export default function TestPage() {
                         currentQuestionIndex === currentSection.questions.length - 1
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                {userTest?.test_templates.title}
-              </h1>
-              <p className="text-sm text-gray-600">
-                {currentSection.section.charAt(0).toUpperCase() + currentSection.section.slice(1)} Section
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+      <div className="w-full max-w-5xl mx-auto p-6">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  {userTest?.test_templates.title}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {currentSection.section.charAt(0).toUpperCase() + currentSection.section.slice(1)} Section
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-medium text-red-600">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+              <Badge variant="outline">
+                {answeredQuestions}/{totalQuestions} Answered ({attemptedQuestions} Attempted)
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium text-red-600">
-                {formatTime(timeRemaining)}
-              </span>
-            </div>
-            <Badge variant="outline">
-              {answeredQuestions}/{totalQuestions} Answered ({attemptedQuestions} Attempted)
-            </Badge>
-          </div>
+          <Progress value={progress} className="mt-4" />
         </div>
-        <Progress value={progress} className="mt-4" />
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Main Content */}
         <Card className="shadow-lg">
-          <CardHeader>
+          <CardHeader className="pb-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-green-600" />
+              <CardTitle className="flex items-center space-x-2 text-2xl">
+                <FileText className="w-6 h-6 text-green-600" />
                 <span className="capitalize">{currentSection.section}</span>
               </CardTitle>
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-lg px-4 py-2">
                 Question {currentQuestionIndex + 1} of {currentSection.questions.length}
               </Badge>
             </div>
             {currentQuestion.subsection && (
-              <p className="text-sm text-gray-600">{currentQuestion.subsection}</p>
+              <p className="text-lg text-gray-600 mt-2">{currentQuestion.subsection}</p>
             )}
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8 px-8">
             {/* Question Prompt */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-medium text-gray-900 leading-relaxed">
                   {currentQuestion.prompt}
                 </h3>
                 {answers[currentQuestion.id] && answers[currentQuestion.id].trim() !== '' ? (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle className="w-3 h-3 mr-1" />
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-base px-3 py-1">
+                    <CheckCircle className="w-4 h-4 mr-1" />
                     Answered
                   </Badge>
                 ) : answers[currentQuestion.id] !== undefined ? (
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-base px-3 py-1">
                     Skipped
                   </Badge>
                 ) : null}
               </div>
               {currentQuestion.instructions && (
-                <p className="text-sm text-gray-600 mb-4">{currentQuestion.instructions}</p>
+                <p className="text-base text-gray-600 mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">{currentQuestion.instructions}</p>
               )}
             </div>
 
             {/* Audio Player (for listening questions) */}
             {currentQuestion.audio_url && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <Volume2 className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Audio</span>
+              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Volume2 className="w-6 h-6 text-green-600" />
+                  <span className="font-medium text-lg">Audio</span>
                 </div>
-                <audio controls className="w-full mt-2">
+                <audio controls className="w-full">
                   <source src={currentQuestion.audio_url} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
@@ -348,7 +405,7 @@ export default function TestPage() {
             )}
 
             {/* Answer Input */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Show radio buttons for any question that has options */}
               {currentQuestion.options && (
                 (() => {
@@ -378,109 +435,132 @@ export default function TestPage() {
                   }
 
                   return (
-                    <RadioGroup
-                      value={answers[currentQuestion.id] || ''}
-                      onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-                    >
-                      {Object.entries(parsedOptions).map(([optionKey, optionValue], index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <RadioGroupItem value={optionKey} id={`option-${index}`} />
-                          <Label htmlFor={`option-${index}`} className="text-sm">
-                            {optionValue}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Select your answer:</h4>
+                      <RadioGroup
+                        value={answers[currentQuestion.id] || ''}
+                        onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                        className="space-y-4"
+                      >
+                        {Object.entries(parsedOptions).map(([optionKey, optionValue], index) => (
+                          <div key={index} className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <RadioGroupItem value={optionKey} id={`option-${index}`} className="mt-1" />
+                            <Label htmlFor={`option-${index}`} className="text-base leading-relaxed cursor-pointer flex-1">
+                              {optionValue}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   )
                 })()
               )}
 
               {/* Writing questions */}
               {currentQuestion.section === 'writing' && (
-                <div>
+                <div className="space-y-4">
+                  <h4 className="text-lg font-medium text-gray-900">Write your answer:</h4>
                   <Textarea
                     placeholder="Write your answer here (minimum 100 words, maximum 400 words)..."
                     value={answers[currentQuestion.id] || ''}
                     onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-                    className="min-h-[200px]"
+                    className="min-h-[300px] text-base p-4"
                     maxLength={400}
                   />
-                  <p className="text-xs text-gray-500 mt-2">
-                    {answers[currentQuestion.id]?.length || 0}/400 characters
-                  </p>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Minimum 100 words recommended</span>
+                    <span>{answers[currentQuestion.id]?.length || 0}/400 characters</span>
+                  </div>
                 </div>
               )}
 
               {/* Speaking questions */}
               {currentQuestion.section === 'speaking' && (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      variant={isRecording ? "destructive" : "default"}
-                    >
-                      {isRecording ? (
-                        <>
-                          <Pause className="w-4 h-4 mr-2" />
-                          Stop Recording
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="w-4 h-4 mr-2" />
-                          Start Recording
-                        </>
+                <div className="space-y-6">
+                  <h4 className="text-lg font-medium text-gray-900">Record or type your answer:</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <Button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        variant={isRecording ? "destructive" : "default"}
+                        size="lg"
+                        className="px-6 py-3"
+                      >
+                        {isRecording ? (
+                          <>
+                            <Pause className="w-5 h-5 mr-2" />
+                            Stop Recording
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-5 h-5 mr-2" />
+                            Start Recording
+                          </>
+                        )}
+                      </Button>
+                      {audioBlob && (
+                        <audio controls className="h-12">
+                          <source src={URL.createObjectURL(audioBlob)} type="audio/wav" />
+                        </audio>
                       )}
-                    </Button>
-                    {audioBlob && (
-                      <audio controls>
-                        <source src={URL.createObjectURL(audioBlob)} type="audio/wav" />
-                      </audio>
-                    )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="speaking-answer" className="text-base font-medium">Or type your answer:</Label>
+                      <Input
+                        id="speaking-answer"
+                        placeholder="Type your answer here..."
+                        value={answers[currentQuestion.id] || ''}
+                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                        className="text-base p-3"
+                      />
+                    </div>
                   </div>
-                  <Input
-                    placeholder="Or type your answer here..."
-                    value={answers[currentQuestion.id] || ''}
-                    onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-                  />
                 </div>
               )}
 
               {/* Text input for questions without options and not writing/speaking */}
               {!currentQuestion.options && currentQuestion.section !== 'writing' && currentQuestion.section !== 'speaking' && (
-                <Input
-                  placeholder="Enter your answer..."
-                  value={answers[currentQuestion.id] || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-                />
+                <div className="space-y-4">
+                  <h4 className="text-lg font-medium text-gray-900">Enter your answer:</h4>
+                  <Input
+                    placeholder="Type your answer here..."
+                    value={answers[currentQuestion.id] || ''}
+                    onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                    className="text-base p-3"
+                  />
+                </div>
               )}
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between pt-8 border-t border-gray-200">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentSectionIndex === 0 && currentQuestionIndex === 0}
+                size="lg"
+                className="px-6 py-3"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-5 h-5 mr-2" />
                 Previous
               </Button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {isLastQuestion ? (
                   <Button
                     onClick={handleSubmitTest}
                     disabled={submitting}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 px-8 py-3 text-lg"
+                    size="lg"
                   >
                     {submitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Submitting...
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
+                        <Send className="w-5 h-5 mr-2" />
                         Submit for Review
                       </>
                     )}
@@ -490,15 +570,19 @@ export default function TestPage() {
                     <Button
                       onClick={handleSkip}
                       variant="outline"
+                      size="lg"
+                      className="px-6 py-3"
                     >
                       Skip
                     </Button>
                     <Button
                       onClick={handleNext}
                       disabled={!canGoNext}
+                      size="lg"
+                      className="px-6 py-3"
                     >
                       Next
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </>
                 )}
@@ -506,7 +590,108 @@ export default function TestPage() {
             </div>
           </CardContent>
         </Card>
+        {error && (
+          <div className="text-red-600 mb-2 text-center">{error}</div>
+        )}
       </div>
+
+      {/* Submit Confirmation Dialog */}
+      <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <span>Confirm Test Submission</span>
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to submit your test? This action cannot be undone.
+              {timeRemaining > 0 && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    ⏰ You still have <strong>{formatTime(timeRemaining)}</strong> remaining.
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    You can continue reviewing your answers if needed.
+                  </p>
+                </div>
+              )}
+              <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-700">
+                  <strong>Progress:</strong> {answeredQuestions}/{totalQuestions} questions answered
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {totalQuestions - answeredQuestions} questions remaining
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
+              Continue Test
+            </Button>
+            <Button 
+              onClick={confirmSubmit}
+              disabled={submitting}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Submit Test
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Time Up Dialog */}
+      <Dialog open={showTimeUpDialog} onOpenChange={setShowTimeUpDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-red-500" />
+              <span>Time's Up!</span>
+            </DialogTitle>
+            <DialogDescription>
+              Your test time has expired. Your test will be automatically submitted with your current answers.
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>Final Progress:</strong> {answeredQuestions}/{totalQuestions} questions answered
+                </p>
+                {totalQuestions - answeredQuestions > 0 && (
+                  <p className="text-xs text-blue-700 mt-1">
+                    {totalQuestions - answeredQuestions} questions were not answered
+                  </p>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              disabled={autoSubmitting}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {autoSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Auto-submitting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Test Submitted
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

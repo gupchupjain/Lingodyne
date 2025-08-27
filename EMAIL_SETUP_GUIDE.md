@@ -64,11 +64,11 @@ Make sure your `.env.local` has:
 
 ```bash
 # Required
-RESEND_API_KEY=re_fo66dP62_P2CU6dfELqPgoXfLrj2qNyD6
-NEXT_PUBLIC_APP_URL=https://v0-corporate-language-test-site.vercel.app
+RESEND_API_KEY=your_resend_api_key
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
 
 # Optional (for custom domain)
-CUSTOM_DOMAIN=v0-corporate-language-test-site.vercel.app
+CUSTOM_DOMAIN=yourcompany.com
 ```
 
 ## Common Error Messages & Solutions
